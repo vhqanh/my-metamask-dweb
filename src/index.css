@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@import "../aioz-ui/packages/core/src/styles/__index.css";
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
