@@ -1,127 +1,70 @@
-import { Button } from "@aioz-ui/core/components/button"
-import { CheckBrokenIcon } from "@aioz-ui/icon-react"
-import { useState } from 'react'
-import './App.css'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { Button } from '@aioz-ui/core/components/button'
+import { SettingsIcon } from '@aioz-ui/icon-react'
+import { useEffect, useState } from 'react'
+import type { Wallet } from './lib/wallet'
+import { connectMetaMask, refreshMetaMask } from './lib/wallet'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [wallet, setWallet] = useState<Wallet>({ account: null, chainId: null })
+  const [loading, setLoading] = useState(false)
+  const canListen = typeof window !== 'undefined'
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined
+    if (!canListen) return
+
+    ;(async () => {
+      setWallet(await refreshMetaMask())
+    })()
+
+    const eth = window.ethereum
+    if (!eth?.on) return
+
+    const onAccountsChanged = (accounts: string[]) => {
+      setWallet((prev) => ({ ...prev, account: accounts?.[0] ?? null }))
+    }
+
+    const onChainChanged = (chainId: string) => {
+      setWallet((prev) => ({ ...prev, chainId }))
+    }
+
+    eth.on('accountsChanged', onAccountsChanged)
+    eth.on('chainChanged', onChainChanged)
+
+   cleanup = () => {
+      eth.removeListener?.('accountsChanged', onAccountsChanged)
+      eth.removeListener?.('chainChanged', onChainChanged)
+    }
+
+    return cleanup
+  }, [])
+
+  async function onConnect() {
+    setLoading(true)
+    try {
+      setWallet(await connectMetaMask())
+    } catch (e: unknown) {
+      alert((e as Error).message ?? String(e))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-          <Button className="btn btn-lg btn-primary">
-              AIOZ Network
-              <CheckBrokenIcon />
-          </Button>
+    <div className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="h-5 w-5" />
+          <div className="font-semibold">MetaMask Demo</div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="space-y-1 text-sm">
+          <div>Account: {wallet.account ?? '-'}</div>
+          <div>ChainId: {wallet.chainId ?? '-'}</div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <Button onClick={onConnect} disabled={loading}>
+          {loading ? 'Connecting...' : 'Connect Wallet'}
+        </Button>
+      </div>
   )
 }
-
-export default App
