@@ -1,12 +1,20 @@
-import { Button } from '@aioz-ui/core/components/button'
-import { SettingsIcon } from '@aioz-ui/icon-react'
+/* eslint-disable prefer-const */
+import { Button } from '@aioz-ui/core-v3/components/button'
+import { Input } from '@aioz-ui/core-v3/components/input'
+import { Check0, SettingsIcon } from '@aioz-ui/icon-react'
 import { useEffect, useState } from 'react'
-import type { Wallet } from './lib/wallet'
-import { connectMetaMask, refreshMetaMask } from './lib/wallet'
+import { connectMetaMask, refreshMetaMask, sendTransaction, switchNetwork } from './lib/wallet'
+import type { NetworkKey, TxRes, Wallet } from './types'
+import { NETWORKS } from './types'
 
 export default function App() {
   const [wallet, setWallet] = useState<Wallet>({ account: null, chainId: null })
   const [loading, setLoading] = useState(false)
+  const [txRes, setTxRes] = useState<TxRes>(null)
+  const [sendTo, setSendTo] = useState('')
+  const [sendValue, setSendValue]=useState('')
+  const [networkKey, setNetworkKey] = useState<keyof typeof NETWORKS>('ether')
+
   const canListen = typeof window !== 'undefined'
 
   useEffect(() => {
@@ -28,9 +36,12 @@ export default function App() {
       setWallet((prev) => ({ ...prev, chainId }))
     }
 
+    
+
     eth.on('accountsChanged', onAccountsChanged)
     eth.on('chainChanged', onChainChanged)
 
+    
    cleanup = () => {
       eth.removeListener?.('accountsChanged', onAccountsChanged)
       eth.removeListener?.('chainChanged', onChainChanged)
@@ -50,6 +61,21 @@ export default function App() {
     }
   }
 
+  const onSwitchNetwork = async (key: NetworkKey)=> {
+    setNetworkKey(key)
+    await switchNetwork(key);
+    setWallet(await refreshMetaMask())
+  }
+
+  const onSendTransaction = async()=>{
+    const res = await sendTransaction({
+      from: wallet.account,
+      to: sendTo,
+      value: sendValue
+    })
+    setTxRes(res)
+  }
+
   return (
     <div className="p-6 space-y-4">
         <div className="flex items-center gap-2">
@@ -62,9 +88,33 @@ export default function App() {
           <div>ChainId: {wallet.chainId ?? '-'}</div>
         </div>
 
-        <Button onClick={onConnect} disabled={loading}>
+        <Button variant='primary' onClick={onConnect} disabled={loading} rightIcon={loading ? undefined : wallet.account ? <Check0 /> : undefined}>
           {loading ? 'Connecting...' : 'Connect Wallet'}
         </Button>
-      </div>
+
+        <div className='flex items-center gap-1 justify-center'>
+          {Object.keys(NETWORKS).map((key) => (
+            <Button variant='secondary' key={key} onClick={() => onSwitchNetwork(key as NetworkKey)} disabled={loading || networkKey === key}>
+              Switch to {key}
+            </Button>
+          ))}
+        </div>
+
+        <div className='flex flex-col mt-20 gap-2 w-full'>
+          <Input placeholder='Send to address' value ={sendTo} onChange={(e) => setSendTo(e.target.value)} />
+          <Input placeholder='Value' value={sendValue} onChange={(e) => setSendValue(e.target.value)} />
+          <Button variant='primary' onClick={onSendTransaction} disabled={!wallet.account || !wallet.chainId || !sendTo || !sendValue}>
+            Send Transaction
+          </Button>
+          <p className='text-stone-950'>Network: {networkKey}</p> 
+          {txRes && (
+            <div className={`p-2 rounded ${txRes.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : txRes.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              Tx Hash: {txRes.hash} <br />
+              Status: {txRes.status} <br />
+              {txRes.msg && <>Message: {txRes.msg}</>}
+            </div>
+          )}
+        </div>
+    </div>
   )
 }

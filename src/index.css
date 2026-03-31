@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../aioz-ui/packages/core/src/styles/__index.css";
+@import "../aioz-ui/packages/styles/src/v1/__index.css";
 
 :root {
   --text: #6b6375;

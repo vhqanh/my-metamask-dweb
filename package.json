@@ -10,8 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aioz-ui/core": "link:aioz-ui/packages/core",
-    "@aioz-ui/icon-react": "link:aioz-ui/packages/aioz-icon-react",
+    "@aioz-ui/core-v3": "link:aioz-ui/packages/core-v3",
+    "@aioz-ui/icon-react": "link:aioz-ui/packages/icon-react",
+    "@aioz-ui/styles": "link:aioz-ui/packages/styles",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

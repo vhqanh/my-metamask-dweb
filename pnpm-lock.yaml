@@ -8,12 +8,15 @@ importers:
 
   .:
     dependencies:
-      '@aioz-ui/core':
-        specifier: link:aioz-ui/packages/core
-        version: link:aioz-ui/packages/core
+      '@aioz-ui/core-v3':
+        specifier: link:aioz-ui/packages/core-v3
+        version: link:aioz-ui/packages/core-v3
       '@aioz-ui/icon-react':
-        specifier: link:aioz-ui/packages/aioz-icon-react
-        version: link:aioz-ui/packages/aioz-icon-react
+        specifier: link:aioz-ui/packages/icon-react
+        version: link:aioz-ui/packages/icon-react
+      '@aioz-ui/styles':
+        specifier: link:aioz-ui/packages/styles
+        version: link:aioz-ui/packages/styles
       react:
         specifier: ^19.2.4
         version: 19.2.4

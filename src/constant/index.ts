@@ -1,0 +1,2 @@
+export const account1='0x190A4F1111843Ed5ad55aABFe5970530d30e05E4'
+export const account2='0x41C4740428e14ADb91698682dccf04867CF75Da2'
