@@ -61,27 +61,3 @@ export interface Transaction {
 export interface ContractTransaction extends Transaction {
   contractAddress: string;
 }
-
-export const NETWORKS: Record<NetworkKey, Network> = {
-  sepolia: {
-    chainId: "0xaa36a7",
-    chainName: "Sepolia Testnet",
-    rpcUrls: ["https://rpc.sepolia.org"],
-    nativeCurrency: { name: "SepoliaETH", symbol: "ETH", decimals: 18 },
-    blockExplorerUrls: ["https://sepolia.etherscan.io"],
-  },
-  "aioz-testnet": {
-    chainId: "0x6571",
-    chainName: "AIOZ Testnet",
-    rpcUrls: ["https://eth-ds.testnet.aioz.network"],
-    nativeCurrency: { name: "AIOZ", symbol: "AIOZ", decimals: 18 },
-    blockExplorerUrls: ["https://testnet.explorer.aioz.network"],
-  },
-  ether: {
-    chainId: "0x1",
-    chainName: "Ethereum Mainnet",
-    rpcUrls: [""],
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    blockExplorerUrls: ["https://etherscan.io"],
-  },
-};

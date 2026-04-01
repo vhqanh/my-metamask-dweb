@@ -1,10 +1,10 @@
+import { NETWORKS } from "../constant";
 import type {
   ContractTransaction,
   Transaction,
   TxRes,
   Wallet,
 } from "../types/index";
-import { NETWORKS } from "../types/index";
 
 export async function connectMetaMask(): Promise<Wallet> {
   const eth = window.ethereum;
