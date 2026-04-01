@@ -13,8 +13,12 @@
     "@aioz-ui/core-v3": "link:aioz-ui/packages/core-v3",
     "@aioz-ui/icon-react": "link:aioz-ui/packages/icon-react",
     "@aioz-ui/styles": "link:aioz-ui/packages/styles",
+    "@tanstack/react-query": "^5.96.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.2",
+    "viem": "~2.47.6",
+    "wagmi": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
