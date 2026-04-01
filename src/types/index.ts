@@ -58,6 +58,9 @@ export interface Transaction {
   to: string | null;
   value: string | null;
 }
+export interface ContractTransaction extends Transaction {
+  contractAddress: string;
+}
 
 export const NETWORKS: Record<NetworkKey, Network> = {
   sepolia: {

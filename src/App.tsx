@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   connectMetaMask,
   refreshMetaMask,
+  sendMyToken,
   sendTransaction,
   switchNetwork,
 } from "./lib/wallet";
@@ -22,6 +23,10 @@ export default function App() {
   const [sendTo, setSendTo] = useState("");
   const [sendValue, setSendValue] = useState("");
   const [networkKey, setNetworkKey] = useState<keyof typeof NETWORKS>("ether");
+
+  const [tokenTo, setTokenTo] = useState("");
+  const [contractAddress, setContractAddress] = useState("");
+  const [amount, setAmount] = useState("");
 
   const canListen = typeof window !== "undefined";
 
@@ -80,6 +85,16 @@ export default function App() {
     setTxRes(res);
   };
 
+  const onSendMTK = async () => {
+    const res = await sendMyToken({
+      from: wallet.account,
+      to: tokenTo,
+      value: amount,
+      contractAddress,
+    });
+    setTxRes(res);
+  };
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-2">
@@ -123,7 +138,7 @@ export default function App() {
           onChange={(e) => setSendTo(e.target.value)}
         />
         <Input
-          placeholder="Value"
+          placeholder="Value in ETH"
           value={sendValue}
           onChange={(e) => setSendValue(e.target.value)}
         />
@@ -133,6 +148,47 @@ export default function App() {
           disabled={!wallet.account || !wallet.chainId || !sendTo || !sendValue}
         >
           Send Transaction
+        </Button>
+        <p className="text-stone-950">Network: {networkKey}</p>
+        {txRes && (
+          <div
+            className={`p-2 rounded ${txRes.status === "pending" ? "bg-yellow-100 text-yellow-800" : txRes.status === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          >
+            Tx Hash: {txRes.hash} <br />
+            Status: {txRes.status} <br />
+            {txRes.msg && <>Message: {txRes.msg}</>}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col mt-20 gap-2 w-full">
+        <Input
+          placeholder="Send to address"
+          value={tokenTo}
+          onChange={(e) => setTokenTo(e.target.value)}
+        />
+        <Input
+          placeholder="Contract address"
+          value={contractAddress}
+          onChange={(e) => setContractAddress(e.target.value)}
+        />
+        <Input
+          placeholder="Value in MTK"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <Button
+          variant="primary"
+          onClick={onSendMTK}
+          disabled={
+            !wallet.account ||
+            !wallet.chainId ||
+            !contractAddress ||
+            !amount ||
+            !tokenTo
+          }
+        >
+          Send MTK
         </Button>
         <p className="text-stone-950">Network: {networkKey}</p>
         {txRes && (

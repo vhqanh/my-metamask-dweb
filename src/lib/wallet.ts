@@ -1,4 +1,9 @@
-import type { Transaction, TxRes, Wallet } from "../types/index";
+import type {
+  ContractTransaction,
+  Transaction,
+  TxRes,
+  Wallet,
+} from "../types/index";
 import { NETWORKS } from "../types/index";
 
 export async function connectMetaMask(): Promise<Wallet> {
@@ -79,31 +84,23 @@ export const switchNetwork = async (network: keyof typeof NETWORKS) => {
   }
 };
 
-export const parseEtherToHexWei = (value: string) => {
-  if (!/^\d*\.?\d+$/.test(value)) {
-    throw new Error("Invalid number format");
-  }
-  const [integerPart, decimalPart = ""] = value.split(".");
-  const paddedDecimal = (decimalPart + "0".repeat(18)).slice(0, 18);
-  const weiString = integerPart + paddedDecimal;
-  const normalized = weiString.replace(/^0+/, "") || "0";
-  const weiBigInt = BigInt(normalized);
-  return "0x" + weiBigInt.toString(16);
-};
-
 export const sendTransaction = async (tx: Transaction): Promise<TxRes> => {
   const eth = window.ethereum;
   if (!eth) throw new Error("MetaMask not found");
   if (!tx.from || !tx.to || !tx.value) {
     throw new Error("Transaction fields cannot be empty");
   }
+
+  const valueWei = BigInt(Math.floor(parseFloat(tx.value ?? "0") * 1e18));
+  const valueHex = "0x" + valueWei.toString(16);
+
   try {
     const txHash: string = await eth.request<string>({
       method: "eth_sendTransaction",
       params: [
         {
           ...tx,
-          value: parseEtherToHexWei(tx.value ?? "0"),
+          value: valueHex,
         },
       ],
     });
@@ -112,6 +109,55 @@ export const sendTransaction = async (tx: Transaction): Promise<TxRes> => {
   } catch (error) {
     throw new Error(
       `Failed to send transaction: ${(error as Error).message ?? String(error)}`,
+    );
+  }
+};
+
+const pad32 = (hex: string) => {
+  return hex.replace(/^0x/, "").padStart(64, "0");
+};
+
+const encodeFunctionTransfer = (addressTo: string, value: bigint) => {
+  const methodId = "a9059cbb";
+
+  const addressToPadded = pad32(addressTo);
+  const valueHex = value.toString(16);
+  const valuePadded = pad32(valueHex);
+
+  return "0x" + methodId + addressToPadded + valuePadded;
+};
+
+export const sendMyToken = async (tx: ContractTransaction): Promise<TxRes> => {
+  const eth = window.ethereum;
+  if (!eth) throw new Error("MetaMask not found");
+  if (!tx.from || !tx.contractAddress || !tx.value || !tx.to) {
+    alert("Transaction fields cannot be empty");
+    throw new Error("Transaction fields cannot be empty");
+  }
+
+  const decialToken = 6;
+
+  const data = encodeFunctionTransfer(
+    tx.to ?? "",
+    BigInt(Math.floor(parseFloat(tx.value ?? "0") * Math.pow(10, decialToken))),
+  );
+
+  try {
+    const txHash: string = await eth.request<string>({
+      method: "eth_sendTransaction",
+      params: [
+        {
+          from: tx.from,
+          to: tx.contractAddress,
+          data,
+        },
+      ],
+    });
+
+    return { hash: txHash, status: "pending" };
+  } catch (error) {
+    throw new Error(
+      `Failed to send MTK: ${(error as Error).message ?? String(error)}`,
     );
   }
 };
