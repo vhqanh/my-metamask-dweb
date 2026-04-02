@@ -10,17 +10,25 @@ import {
 } from "@aioz-ui/core-v3/components";
 import { ToggleTabs } from "@aioz-ui/core-v3/components/tabs";
 import { useState } from "react";
-import { parseEther } from "viem";
-import { useSendTransaction, useWriteContract } from "wagmi";
-import { TRANSACTION_TABS } from "../../../constant";
-import type { Address, TxStatus } from "../../../types";
+import { TRANSACTION_TABS } from "../constant";
+import type { Address, TxStatus } from "../types";
 
 const DECIMAL_CONTRACT = 6;
+
+type TransactionFn = (param: {
+  to: Address;
+  value?: bigint;
+  contractAdress?: Address;
+}) => Promise<{ hash?: Address; error?: string }>;
 
 interface TransactionResult {
   hash?: Address;
   status?: TxStatus;
   msg?: string;
+}
+
+interface Props {
+  sendTransaction: TransactionFn;
 }
 
 function txVariant(status?: TxStatus) {
@@ -29,39 +37,7 @@ function txVariant(status?: TxStatus) {
   return "warning";
 }
 
-const abi = [
-  {
-    type: "function",
-    name: "balanceOf",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ type: "uint" }],
-  },
-  {
-    type: "function",
-    name: "totalSupply",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "supply", type: "uint" }],
-  },
-  {
-    type: "function",
-    name: "transfer",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [],
-  },
-] as const;
-
-const TransactionSection = () => {
-  const sendTransaction = useSendTransaction();
-  const { mutate: sendTx } = sendTransaction;
-  const writeContract = useWriteContract();
-  const { mutate: sendMTK } = writeContract;
-
+const TransactionCard = ({ sendTransaction }: Props) => {
   const [loading, setLoading] = useState(false);
   const [tabs, setTabs] = useState<"eth" | "mtk">("eth");
   const [sendTo, setSendTo] = useState<Address | null>(null);
@@ -69,56 +45,24 @@ const TransactionSection = () => {
   const [contractAddress, setContractAddress] = useState<Address | null>(null);
   const [result, setResult] = useState<TransactionResult | null>(null);
 
-  const onSendTransaction = () => {
-    setLoading(true);
-    sendTx(
-      {
-        to: sendTo!,
-        value: parseEther(value),
-      },
-      {
-        onSuccess(data) {
-          setResult({
-            hash: data,
-            status: "success",
-          });
-          setLoading(false);
-        },
-        onError(error) {
-          setResult({ status: "error", msg: error.message });
-          setLoading(false);
-        },
-      },
-    );
-  };
+  const handleSendTransaction = async () => {
+    if (!sendTo) return;
+    try {
+      setLoading(true);
 
-  const onSendMTK = () => {
-    setLoading(true);
-    sendMTK(
-      {
-        abi,
-        address: contractAddress!,
-        functionName: "transfer",
-        args: [
-          sendTo!,
-          BigInt(
-            Math.floor(
-              parseFloat(value ?? "0") * Math.pow(10, DECIMAL_CONTRACT),
-            ),
-          ),
-        ],
-      },
-      {
-        onSuccess(data) {
-          setResult({ hash: data, status: "success" });
-          setLoading(false);
-        },
-        onError(error) {
-          setResult({ status: "error", msg: error.message });
-          setLoading(false);
-        },
-      },
-    );
+      const res = await sendTransaction({
+        to: sendTo,
+        value: BigInt(
+          Math.floor(parseFloat(value ?? "0") * Math.pow(10, DECIMAL_CONTRACT)),
+        ),
+        contractAdress: tabs === "mtk" ? contractAddress! : undefined,
+      });
+
+      if (res.hash) setResult({ hash: res.hash, status: "success" });
+      else setResult({ status: "error", msg: res.error });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -153,7 +97,7 @@ const TransactionSection = () => {
               />
               <Button
                 variant="primary"
-                onClick={onSendTransaction}
+                onClick={handleSendTransaction}
                 disabled={loading || !sendTo || !value}
               >
                 Send transaction
@@ -194,7 +138,7 @@ const TransactionSection = () => {
               />
               <Button
                 variant="primary"
-                onClick={onSendMTK}
+                //onClick={onSendMTK}
                 disabled={loading || !contractAddress || !sendTo}
               >
                 Send MTK
@@ -218,4 +162,4 @@ const TransactionSection = () => {
   );
 };
 
-export default TransactionSection;
+export default TransactionCard;

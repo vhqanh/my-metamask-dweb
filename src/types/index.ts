@@ -3,6 +3,9 @@ export type Wallet = {
   chainId: string | null;
 };
 
+export type Address = `0x${string}`;
+export type TxStatus = "pending" | "success" | "error";
+
 export type NetworkKey = "sepolia" | "aioz-testnet" | "ether";
 
 export type TxRes = {
