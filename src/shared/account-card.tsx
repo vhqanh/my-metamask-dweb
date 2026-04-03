@@ -12,8 +12,9 @@ import { ToggleTabs } from "@aioz-ui/core-v3/components/tabs";
 import type { Address } from "../types";
 
 interface Props {
-  publicAddress?: Address;
+  publicAddress?: Address | string;
   chainId: string;
+  networkKey?: string;
   isConnected: boolean;
   tabs: ToggleTabItem[];
   onSwitchNetwork: (params: number | string) => void;
@@ -22,6 +23,7 @@ interface Props {
 const AccountCard = ({
   publicAddress,
   chainId,
+  networkKey,
   isConnected,
   tabs,
   onSwitchNetwork,
@@ -79,9 +81,13 @@ const AccountCard = ({
             <CardContent className="p-6 space-y-3">
               <ToggleTabs
                 items={tabs}
-                value={chainId}
+                value={networkKey ?? chainId}
                 onValueChange={(value) => onSwitchNetwork(value)}
               />
+              <div className="text-body-02 text-content-sec">
+                Current:{" "}
+                <span className="font-medium">{networkKey ?? chainId}</span>
+              </div>
             </CardContent>
           </Card>
         </div>

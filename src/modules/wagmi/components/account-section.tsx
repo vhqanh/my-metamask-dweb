@@ -1,5 +1,6 @@
 import type { ToggleTabItem } from "@aioz-ui/core-v3/components/tabs";
-import { useChains, useConnection, useSwitchChain } from "wagmi";
+import { useChains, useConnection, useReconnect, useSwitchChain } from "wagmi";
+import { useEthereumProviderSync } from "../../../hooks/use-ethereum-provider-wallet";
 import AccountCard from "../../../shared/account-card";
 
 const formatChainId = (chainId?: number) => {
@@ -8,6 +9,11 @@ const formatChainId = (chainId?: number) => {
 };
 
 const AccountSection = () => {
+  const reconnect = useReconnect();
+  useEthereumProviderSync(() => {
+    reconnect.mutate({});
+  });
+
   const connection = useConnection();
   const address = connection.address;
   const chainId = formatChainId(connection.chainId);
@@ -20,15 +26,17 @@ const AccountSection = () => {
   }));
 
   return (
-    <AccountCard
-      publicAddress={address}
-      chainId={chainId}
-      isConnected={isConnected}
-      tabs={tabs}
-      onSwitchNetwork={(value) =>
-        switchChain.mutate({ chainId: Number(value) })
-      }
-    />
+    <>
+      <AccountCard
+        publicAddress={address}
+        chainId={chainId}
+        isConnected={isConnected}
+        tabs={tabs}
+        onSwitchNetwork={(value) =>
+          switchChain.mutate({ chainId: Number(value) })
+        }
+      />
+    </>
   );
 };
 

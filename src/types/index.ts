@@ -5,14 +5,9 @@ export type Wallet = {
 
 export type Address = `0x${string}`;
 export type TxStatus = "pending" | "success" | "error";
+export type TransactionType = "eth" | "mtk";
 
-export type NetworkKey = "sepolia" | "aioz-testnet" | "ether";
-
-export type TxRes = {
-  hash: string;
-  status: "pending" | "success" | "error";
-  msg?: string;
-} | null;
+export type NetworkKey = "Sepolia" | "Aioz-Testnet" | "Ethereum";
 
 type EthereumEventMap = {
   accountsChanged: (accounts: string[]) => void;
@@ -56,11 +51,10 @@ export interface Network {
   blockExplorerUrls: string[];
 }
 
-export interface Transaction {
-  from: string | null;
-  to: string | null;
-  value: string | null;
-}
-export interface ContractTransaction extends Transaction {
-  contractAddress: string;
-}
+export type TransactionFn = (param: {
+  type: TransactionType;
+  from?: Address | string;
+  to: Address | string;
+  value?: bigint | string;
+  contractAddress?: Address | string;
+}) => Promise<{ hash?: Address | string; error?: string }>;

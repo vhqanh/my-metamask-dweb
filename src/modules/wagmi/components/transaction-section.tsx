@@ -1,33 +1,6 @@
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Message,
-} from "@aioz-ui/core-v3/components";
-import { ToggleTabs } from "@aioz-ui/core-v3/components/tabs";
-import { useState } from "react";
-import { parseEther } from "viem";
 import { useSendTransaction, useWriteContract } from "wagmi";
-import { TRANSACTION_TABS } from "../../../constant";
-import type { Address, TxStatus } from "../../../types";
-
-const DECIMAL_CONTRACT = 6;
-
-interface TransactionResult {
-  hash?: Address;
-  status?: TxStatus;
-  msg?: string;
-}
-
-function txVariant(status?: TxStatus) {
-  if (status === "success") return "success";
-  if (status === "error") return "error";
-  return "warning";
-}
+import TransactionCard from "../../../shared/transaction-card";
+import type { Address, TransactionFn } from "../../../types";
 
 const abi = [
   {
@@ -62,160 +35,64 @@ const TransactionSection = () => {
   const writeContract = useWriteContract();
   const { mutate: sendMTK } = writeContract;
 
-  const [loading, setLoading] = useState(false);
-  const [tabs, setTabs] = useState<"eth" | "mtk">("eth");
-  const [sendTo, setSendTo] = useState<Address | null>(null);
-  const [value, setValue] = useState("");
-  const [contractAddress, setContractAddress] = useState<Address | null>(null);
-  const [result, setResult] = useState<TransactionResult | null>(null);
-
-  const onSendTransaction = () => {
-    setLoading(true);
-    sendTx(
-      {
-        to: sendTo!,
-        value: parseEther(value),
-      },
-      {
-        onSuccess(data) {
-          setResult({
-            hash: data,
-            status: "success",
+  const handleSendTransaction: TransactionFn = async ({
+    type,
+    to,
+    value,
+    contractAddress,
+  }) => {
+    try {
+      switch (type) {
+        case "eth": {
+          return new Promise((resolve) => {
+            sendTx(
+              {
+                to: to as Address,
+                value: value as bigint,
+              },
+              {
+                onSuccess(data) {
+                  resolve({ hash: data });
+                },
+                onError(error) {
+                  resolve({ error: error.message });
+                },
+              },
+            );
           });
-          setLoading(false);
-        },
-        onError(error) {
-          setResult({ status: "error", msg: error.message });
-          setLoading(false);
-        },
-      },
-    );
+        }
+        case "mtk": {
+          if (!contractAddress)
+            return { error: "Contract address is required" };
+          return new Promise((resolve) => {
+            sendMTK(
+              {
+                abi,
+                address: contractAddress as Address,
+                functionName: "transfer",
+                args: [to as Address, value as bigint],
+              },
+              {
+                onSuccess(data) {
+                  resolve({ hash: data });
+                },
+                onError(error) {
+                  resolve({ error: error.message });
+                },
+              },
+            );
+          });
+        }
+        default: {
+          return { error: "Unknown transaction type" };
+        }
+      }
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
   };
 
-  const onSendMTK = () => {
-    setLoading(true);
-    sendMTK(
-      {
-        abi,
-        address: contractAddress!,
-        functionName: "transfer",
-        args: [
-          sendTo!,
-          BigInt(
-            Math.floor(
-              parseFloat(value ?? "0") * Math.pow(10, DECIMAL_CONTRACT),
-            ),
-          ),
-        ],
-      },
-      {
-        onSuccess(data) {
-          setResult({ hash: data, status: "success" });
-          setLoading(false);
-        },
-        onError(error) {
-          setResult({ status: "error", msg: error.message });
-          setLoading(false);
-        },
-      },
-    );
-  };
-
-  return (
-    <Card>
-      <CardHeader className="p-6 pb-0">
-        <CardTitle>Transaction</CardTitle>
-        <CardDescription>
-          Choose an asset and submit a transfer via MetaMask.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <ToggleTabs
-            items={TRANSACTION_TABS}
-            value={tabs}
-            onValueChange={(v) => setTabs(v as typeof tabs)}
-            className="w-full"
-            size="md"
-          />
-
-          {tabs === "eth" && (
-            <div className="flex flex-col gap-3">
-              <Input
-                placeholder="Send to address"
-                value={sendTo ?? ""}
-                onChange={(e) => setSendTo(e.target.value as Address)}
-              />
-              <Input
-                placeholder="Value in ETH"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
-              <Button
-                variant="primary"
-                onClick={onSendTransaction}
-                disabled={loading || !sendTo || !value}
-              >
-                Send transaction
-              </Button>
-
-              {result && (
-                <Message
-                  className="w-full justify-between"
-                  size="md"
-                  variant={txVariant(result.status)}
-                >
-                  <span className="break-all">
-                    {result.hash ? `Tx: ${result.hash}` : result.msg}
-                  </span>
-                </Message>
-              )}
-            </div>
-          )}
-
-          {tabs === "mtk" && (
-            <div className="flex flex-col gap-3">
-              <Input
-                placeholder="Send to address"
-                value={sendTo ?? ""}
-                onChange={(e) => setSendTo(e.target.value as `0x${string}`)}
-              />
-              <Input
-                placeholder="Contract address"
-                value={contractAddress ?? ""}
-                onChange={(e) =>
-                  setContractAddress(e.target.value as `0x${string}`)
-                }
-              />
-              <Input
-                placeholder="Value in MTK"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
-              <Button
-                variant="primary"
-                onClick={onSendMTK}
-                disabled={loading || !contractAddress || !sendTo}
-              >
-                Send MTK
-              </Button>
-              {result && (
-                <Message
-                  className="w-full justify-between"
-                  size="md"
-                  variant={txVariant(result.status)}
-                >
-                  <span className="break-all">
-                    {result.hash ? `Tx: ${result.hash}` : result.msg}
-                  </span>
-                </Message>
-              )}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return <TransactionCard sendTransaction={handleSendTransaction} />;
 };
 
 export default TransactionSection;
