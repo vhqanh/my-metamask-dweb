@@ -1,10 +1,5 @@
-import { NETWORKS } from "../constant";
-import type {
-  ContractTransaction,
-  Transaction,
-  TxRes,
-  Wallet,
-} from "../types/index";
+import { DECIMAL_CONTRACT, NETWORKS } from "../constant";
+import type { TransactionFn, Wallet } from "../types/index";
 
 export async function connectMetaMask(): Promise<Wallet> {
   const eth = window.ethereum;
@@ -84,14 +79,14 @@ export const switchNetwork = async (network: keyof typeof NETWORKS) => {
   }
 };
 
-export const sendTransaction = async (tx: Transaction): Promise<TxRes> => {
+export const sendTransaction: TransactionFn = async ({ from, to, value }) => {
   const eth = window.ethereum;
   if (!eth) throw new Error("MetaMask not found");
-  if (!tx.from || !tx.to || !tx.value) {
+  if (!from || !to || !value) {
     throw new Error("Transaction fields cannot be empty");
   }
 
-  const valueWei = BigInt(Math.floor(parseFloat(tx.value ?? "0") * 1e18));
+  const valueWei = BigInt(Math.floor(parseFloat(String(value ?? "0")) * 1e18));
   const valueHex = "0x" + valueWei.toString(16);
 
   try {
@@ -99,7 +94,8 @@ export const sendTransaction = async (tx: Transaction): Promise<TxRes> => {
       method: "eth_sendTransaction",
       params: [
         {
-          ...tx,
+          from,
+          to,
           value: valueHex,
         },
       ],
@@ -127,19 +123,26 @@ const encodeFunctionTransfer = (addressTo: string, value: bigint) => {
   return "0x" + methodId + addressToPadded + valuePadded;
 };
 
-export const sendMyToken = async (tx: ContractTransaction): Promise<TxRes> => {
+export const sendMyToken: TransactionFn = async ({
+  from,
+  to,
+  value,
+  contractAddress,
+}) => {
   const eth = window.ethereum;
   if (!eth) throw new Error("MetaMask not found");
-  if (!tx.from || !tx.contractAddress || !tx.value || !tx.to) {
+  if (!from || !contractAddress || !value || !to) {
     alert("Transaction fields cannot be empty");
     throw new Error("Transaction fields cannot be empty");
   }
 
-  const decialToken = 6;
-
   const data = encodeFunctionTransfer(
-    tx.to ?? "",
-    BigInt(Math.floor(parseFloat(tx.value ?? "0") * Math.pow(10, decialToken))),
+    to ?? "",
+    BigInt(
+      Math.floor(
+        parseFloat(String(value ?? "0")) * Math.pow(10, DECIMAL_CONTRACT),
+      ),
+    ),
   );
 
   try {
@@ -147,8 +150,8 @@ export const sendMyToken = async (tx: ContractTransaction): Promise<TxRes> => {
       method: "eth_sendTransaction",
       params: [
         {
-          from: tx.from,
-          to: tx.contractAddress,
+          from,
+          to: contractAddress,
           data,
         },
       ],

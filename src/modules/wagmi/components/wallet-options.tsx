@@ -1,5 +1,5 @@
 import { Button } from "@aioz-ui/core-v3/components";
-import { injected, useConnect, useConnectors } from "wagmi";
+import { useConnect, useConnectors } from "wagmi";
 
 export function WalletOptions() {
   const connect = useConnect();
@@ -11,7 +11,7 @@ export function WalletOptions() {
         <Button
           key={connector.uid}
           variant="primary"
-          onClick={() => connect.mutate({ connector: injected() })}
+          onClick={() => connect.mutate({ connector })}
           className="min-w-40"
         >
           {connector.name}
