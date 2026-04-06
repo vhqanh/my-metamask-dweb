@@ -17,8 +17,11 @@ export function useEthereumProviderWallet(): {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     void refreshWallet();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
     const eth = window.ethereum;
     if (!eth?.on) return;
@@ -38,7 +41,7 @@ export function useEthereumProviderWallet(): {
       eth.removeListener?.("accountsChanged", onAccountsChanged);
       eth.removeListener?.("chainChanged", onChainChanged);
     };
-  }, [refreshWallet]);
+  }, []);
 
   return { wallet, refreshWallet };
 }
