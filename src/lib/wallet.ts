@@ -79,6 +79,14 @@ export const switchNetwork = async (network: keyof typeof NETWORKS) => {
   }
 };
 
+const parseEtherCustom = (value: string): bigint => {
+  const [integer, fraction = ""] = value.split(".");
+
+  const fractionPadded = (fraction + "000000000000000000").slice(0, 18);
+
+  return BigInt(integer) * 10n ** 18n + BigInt(fractionPadded);
+}
+
 export const sendTransaction: TransactionFn = async ({ from, to, value }) => {
   const eth = window.ethereum;
   if (!eth) throw new Error("MetaMask not found");
@@ -86,7 +94,7 @@ export const sendTransaction: TransactionFn = async ({ from, to, value }) => {
     throw new Error("Transaction fields cannot be empty");
   }
 
-  const valueWei = BigInt(Math.floor(parseFloat(String(value ?? "0")) * 1e18));
+  const valueWei = parseEtherCustom(value as string ?? "");
   const valueHex = "0x" + valueWei.toString(16);
 
   try {
