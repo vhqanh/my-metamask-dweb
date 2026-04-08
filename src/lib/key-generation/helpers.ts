@@ -22,6 +22,15 @@ export const bytesToBigInt = (bytes: Uint8Array): bigint => {
   return BigInt("0x" + hex);
 };
 
+export const bigIntTo32Bytes = (value: bigint): Uint8Array<ArrayBuffer> => {
+  const hex = value.toString(16).padStart(64, "0");
+  const out: Uint8Array<ArrayBuffer> = new Uint8Array(new ArrayBuffer(32));
+  for (let i = 0; i < 32; i += 1) {
+    out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return out;
+};
+
 export const concatUint8Arrays = (...arrays: Uint8Array[]): Uint8Array => {
   const total = arrays.reduce((sum, a) => sum + a.length, 0);
   const result = new Uint8Array(total);

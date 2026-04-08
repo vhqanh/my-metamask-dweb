@@ -1,9 +1,10 @@
 import * as secp from "@noble/secp256k1";
 import { keccak256 } from "viem";
 import data from "../../assets/en.json";
-import { HARDENED_OFFSET } from "../../constant/key-generation";
+import { CURVE_N, HARDENED_OFFSET } from "../../constant/key-generation";
 import type { ExtendedPrivateKey, ResultKey } from "../../types/key-generation";
 import {
+  bigIntTo32Bytes,
   bytesToBigInt,
   bytesToBinary,
   concatUint8Arrays,
@@ -154,7 +155,25 @@ export const deriveChildKey = async (
     data = concatUint8Arrays(publicKey, ser32(index));
   }
 
-  return extendedKeyFromHmacSha512(parentChainCode.raw, data);
+  const hmacResult = await extendedKeyFromHmacSha512(parentChainCode.raw, data);
+  const il = bytesToBigInt(hmacResult.key.raw);
+  if (il >= CURVE_N) return;
+
+  const parentKeyInt = bytesToBigInt(parentKey.raw);
+  const childKeyInt = (il + parentKeyInt) % CURVE_N;
+  if (childKeyInt === 0n) return;
+
+  const childKeyRaw = bigIntTo32Bytes(childKeyInt);
+  return {
+    key: {
+      raw: childKeyRaw,
+      hex: toHex(childKeyRaw),
+    },
+    chainCode: {
+      raw: new Uint8Array(hmacResult.chainCode.raw),
+      hex: hmacResult.chainCode.hex,
+    },
+  };
 };
 
 export const derivePath = async (
