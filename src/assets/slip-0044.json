@@ -1,0 +1,19 @@
+[
+  { "coinType": 0, "symbol": "BTC", "name": "Bitcoin" },
+  { "coinType": 1, "symbol": "TEST", "name": "Testnet" },
+  { "coinType": 2, "symbol": "LTC", "name": "Litecoin" },
+  { "coinType": 3, "symbol": "DOGE", "name": "Dogecoin" },
+  { "coinType": 5, "symbol": "DASH", "name": "Dash" },
+  { "coinType": 60, "symbol": "ETH", "name": "Ethereum" },
+  { "coinType": 61, "symbol": "ETC", "name": "Ethereum Classic" },
+  { "coinType": 118, "symbol": "ATOM", "name": "Cosmos" },
+  { "coinType": 144, "symbol": "XRP", "name": "Ripple" },
+  { "coinType": 145, "symbol": "BCH", "name": "Bitcoin Cash" },
+  { "coinType": 1815, "symbol": "ADA", "name": "Cardano" },
+  { "coinType": 195, "symbol": "TRX", "name": "Tron" },
+  { "coinType": 354, "symbol": "DOT", "name": "Polkadot" },
+  { "coinType": 397, "symbol": "NEAR", "name": "NEAR Protocol" },
+  { "coinType": 501, "symbol": "SOL", "name": "Solana" },
+  { "coinType": 714, "symbol": "BNB", "name": "Binance Chain" },
+  { "coinType": 9000, "symbol": "AVAX", "name": "Avalanche" }
+]
