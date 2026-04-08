@@ -1,6 +1,7 @@
 import { Button } from "@aioz-ui/core-v3/components";
 import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import EthereumRawApp from "./modules/ethereum-raw/App";
+import KeyGenApp from './modules/key-generation/App';
 import WagmiApp from "./modules/wagmi/App";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -16,12 +17,16 @@ export default function App() {
         <NavLink to="/wagmi" className={navClass}>
           <Button variant="secondary">Wagmi</Button>
         </NavLink>
+        <NavLink to="/key-generation" className={navClass}>
+          <Button variant="secondary">Key Generation</Button>
+        </NavLink>
       </div>
 
       <Routes>
         <Route path="/" element={<Navigate to="/ethereum-raw" replace />} />
         <Route path="/ethereum-raw" element={<EthereumRawApp />} />
         <Route path="/wagmi" element={<WagmiApp />} />
+        <Route path="/key-generation" element={<KeyGenApp />} />
         <Route path="*" element={<Navigate to="/ethereum-raw" replace />} />
       </Routes>
     </div>
