@@ -5,33 +5,51 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
+  Message,
 } from "@aioz-ui/core-v3/components";
 import { SettingsIcon } from "@aioz-ui/icon-react";
-import { useEffect, useState } from "react";
-import { extensionResponse } from "./extension.action";
+import { useState } from "react";
 
-const requestOpenExtension = () => {
-  const ext = (window as Window).myExtension;
-  if (!ext) throw new Error("My extension not found.");
-  ext.open({ name: "Junie", content: "Have a nice day." });
-};
+interface Response {
+  type: "success" | "error" | "default";
+  detail: string;
+}
 
 const ExtensionDemo = () => {
-  const [response, setResponse] = useState("");
+  const [response, setResponse] = useState<Response>({
+    type: "default",
+    detail: "",
+  });
+  const [sendTo, setSendTo] = useState("");
+  const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let flag = false;
-    const listenFromExtension = async () => {
-      const res = await extensionResponse();
-      if (res) setResponse(res);
-    };
-
-    listenFromExtension();
-
-    return () => {
-      flag = true;
-    };
-  }, []);
+  const handleSendTransaction = async () => {
+    const ext = (window as Window).myExtension;
+    if (!ext) throw new Error("My extension not found.");
+    setLoading(true);
+    try {
+      const result = await ext.sendTransaction({
+        from: "Junie",
+        to: sendTo,
+        value,
+      });
+      setResponse({
+        type: "success",
+        detail: result,
+      });
+    } catch (e) {
+      setResponse({
+        type: "error",
+        detail: (e as Error).message,
+      });
+    } finally {
+      setLoading(false);
+      setValue("");
+      setSendTo("");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -51,11 +69,36 @@ const ExtensionDemo = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          <Button variant="primary" onClick={requestOpenExtension}>
-            Open Extension
-          </Button>
-          <div className="text-caption-neutral text-caption-01">
-            Respones from Extension: {response}
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Send to address"
+              value={sendTo ?? ""}
+              onChange={(e) => setSendTo(e.target.value)}
+            />
+            <Input
+              placeholder="Value in ETH"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+            <Button
+              variant="primary"
+              onClick={handleSendTransaction}
+              disabled={!sendTo || !value || loading}
+            >
+              Send MTK
+            </Button>
+
+            {response && (
+              <Message
+                className="w-full justify-between"
+                size="md"
+                variant={response.type}
+              >
+                <div className="text-caption-neutral text-caption-01">
+                  Respones from Extension: {response.detail}
+                </div>
+              </Message>
+            )}
           </div>
         </CardContent>
       </Card>

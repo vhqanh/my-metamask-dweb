@@ -1,11 +1,11 @@
-export interface RequestObj {
-  name: string;
-  content: string;
+export interface TxRequest {
+  from: string;
+  to: string;
+  value: string;
 }
 
 export interface MyExtension {
-  open: (data: RequestObj) => void;
-  waitForResponse: () => Promise<string>;
+  sendTransaction: (tx: TxRequest) => Promise<string>;
 }
 
 export declare global {
